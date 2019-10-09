@@ -23,8 +23,8 @@ NeuralQuantum.preallocate_state_batch(arrT::GPUArray,
                                       T::Type{<:Real},
                                       v::State,
                                       batch_sz) = begin
-    v_gpu = preallocate_state_batch(arrT, T, v, batch_sz)
-    v_cpu = preallocate_state_batch(collect(arrT), T, v, batch_sz)
+    v_gpu = _std_state_batch(arrT, T, v, batch_sz)
+    v_cpu = _std_state_batch(collect(arrT), T, v, batch_sz)
     return CPUCachedBatchState(v_gpu, v_cpu)
 end
 
