@@ -1,8 +1,8 @@
 module NeuralQuantumGPU
 
-using CuArrays: @cufunc
+using CuArrays: CuArrays, @cufunc
 using CuArrays: CuArrays.GPUArrays.GPUArray
-using NeuralQuantum: NeuralQuantum, State
+using NeuralQuantum: NeuralQuantum, State, _std_state_batch
 using UnsafeArrays
 using NNlib
 
