@@ -12,8 +12,8 @@ using NNlib
 @cufunc NeuralQuantum.∂logℒ(x) = one(x)/(one(x)+exp(-x))
 
 #_gpu_logℒ(x) = log1p(exp(x))
-_gpu_logℒ(x::Real) = log1p(exp(x))
-_gpu_logℒ(x::Complex) = log(one(x) + exp(x))
+@cufunc _gpu_logℒ(x::Real) = log1p(exp(x))
+@cufunc _gpu_logℒ(x::Complex) = log(one(x) + exp(x))
 
 @cufunc NeuralQuantum.logℒ(x) = _gpu_logℒ(x)
 
@@ -65,7 +65,7 @@ using Base: ReshapedArray
 
     Ri  = CuArray{eltype(R),2}(under.parent.buf, dims_all[1:2], own=false)
     vbi = CuArray{eltype(vb),1}(vb.buf, (size(vb, 1),), own=false)
-    wbi = CuArray{eltype(wbi),1}(wb.buf, (size(wb, 1),), own=false)
+    wbi = CuArray{eltype(wb),1}(wb.buf, (size(wb, 1),), own=false)
 
     for i=1:size(R, 3)
         Ri.offset = (i-1)*Base.elsize(Ri)*batch_size
