@@ -1,6 +1,6 @@
 module NeuralQuantumGPU
 
-using CuArrays: CuArrays, @cufunc
+using CuArrays: CuArrays, CuArray, @cufunc, CUBLAS
 using CuArrays: CuArrays.GPUArrays.GPUArray
 using NeuralQuantum: NeuralQuantum, State, _std_state_batch, store_state!
 using UnsafeArrays
@@ -11,9 +11,9 @@ using NNlib
 @cufunc NeuralQuantum.ℒ(x) = one(x) + exp(x)
 @cufunc NeuralQuantum.∂logℒ(x) = one(x)/(one(x)+exp(-x))
 
-_gpu_logℒ(x) = log1p(exp(x))
-@cufunc _gpu_logℒ(x::Real) = log1p(exp(x))
-@cufunc _gpu_logℒ(x::Complex) = log(one(x) + exp(x))
+#_gpu_logℒ(x) = log1p(exp(x))
+_gpu_logℒ(x::Real) = log1p(exp(x))
+_gpu_logℒ(x::Complex) = log(one(x) + exp(x))
 
 @cufunc NeuralQuantum.logℒ(x) = _gpu_logℒ(x)
 
@@ -64,15 +64,15 @@ using Base: ReshapedArray
     batch_size = size(under.parent, 1)
 
     Ri  = CuArray{eltype(R),2}(under.parent.buf, dims_all[1:2], own=false)
-    vbi = CuArray{eltype(R),1}(vb.buf, (size(vb, 1),), own=false)
-    wbi = CuArray{eltype(R),1}(wb.buf, (size(wb, 1),), own=false)
+    vbi = CuArray{eltype(vb),1}(vb.buf, (size(vb, 1),), own=false)
+    wbi = CuArray{eltype(wbi),1}(wb.buf, (size(wb, 1),), own=false)
 
     for i=1:size(R, 3)
         Ri.offset = (i-1)*Base.elsize(Ri)*batch_size
         vbi.offset = (i-1)*Base.elsize(vbi)*length(vbi)
         wbi.offset = (i-1)*Base.elsize(wbi)*length(wbi)
         fill!(Ri, 0)
-        BLAS.ger!(one(T), vbi, wbi, Ri)
+        CUBLAS.ger!(one(T), vbi, wbi, Ri)
     end
     return R
 end
@@ -87,16 +87,16 @@ end
     n_batches = length(under_indices[2])
     batch_size = size(under.parent, 1)
 
-    Ri  = CuArray{eltype(R),2}(under.parent.buf, dims_all[1:2], own=false)
-    vbi = CuArray{eltype(R),1}(vb.buf, (size(vb, 1),), own=false)
-    wbi = CuArray{eltype(R),1}(wb.buf, (size(wb, 1),), own=false)
+    Ri  = CuArray{eltype(R),2}( under.parent.buf, dims_all[1:2], own=false)
+    vbi = CuArray{eltype(vb),1}(vb.buf, (size(vb, 1),), own=false)
+    wbi = CuArray{eltype(wb),1}(wb.buf, (size(wb, 1),), own=false)
 
     for i=1:size(R, 3)
         Ri.offset = (i-1)*Base.elsize(Ri)*batch_size
         vbi.offset = (i-1)*Base.elsize(vbi)*length(vbi)
         wbi.offset = (i-1)*Base.elsize(wbi)*length(wbi)
         fill!(Ri, 0)
-        BLAS.ger!(T(α), vbi, wbi, Ri)
+        CUBLAS.ger!(T(α), vbi, wbi, Ri)
     end
     return R
 end
@@ -111,9 +111,9 @@ end
     n_batches = length(under_indices[2])
     batch_size = size(under.parent, 1)
 
-    Ri   = CuArray{eltype(R),2}(under.parent.buf, dims_all[1:2], own=false)
-    vbi  = CuArray{eltype(R),1}(vb.buf, (size(vb, 1),), own=false)
-    wbi  = CuArray{eltype(R),1}(wb.buf, (size(wb, 1),), own=false)
+    Ri   = CuArray{eltype(R),2}( under.parent.buf, dims_all[1:2], own=false)
+    vbi  = CuArray{eltype(vb),1}(vb.buf, (size(vb, 1),), own=false)
+    wbi  = CuArray{eltype(wb),1}(wb.buf, (size(wb, 1),), own=false)
 
     vb2i = CuArray{eltype(R),1}(vb2.buf, (size(vb2, 1),), own=false)
     wb2i = CuArray{eltype(R),1}(wb2.buf, (size(wb2, 1),), own=false)
@@ -125,8 +125,8 @@ end
         vb2i.offset = (i-1)*Base.elsize(vb2i)*length(vb2i)
         wb2i.offset = (i-1)*Base.elsize(wb2i)*length(wb2i)
         fill!(Ri, 0)
-        BLAS.ger!(T(α), vbi, wbi, Ri)
-        BLAS.ger!(T(α), vb2i, wb2i, Ri)
+        CUBLAS.ger!(T(α), vbi, wbi, Ri)
+        CUBLAS.ger!(T(α), vb2i, wb2i, Ri)
     end
     return R
 end
@@ -141,12 +141,12 @@ end
     n_batches = length(under_indices[2])
     batch_size = size(under.parent, 1)
 
-    Ri   = CuArray{eltype(R),2}(under.parent.buf, dims_all[1:2], own=false)
-    vbi  = CuArray{eltype(R),1}(vb.buf, (size(vb, 1),), own=false)
-    wbi  = CuArray{eltype(R),1}(wb.buf, (size(wb, 1),), own=false)
+    Ri   = CuArray{eltype(R),2}( under.parent.buf, dims_all[1:2], own=false)
+    vbi  = CuArray{eltype(vb),1}(vb.buf, (size(vb, 1),), own=false)
+    wbi  = CuArray{eltype(wb),1}(wb.buf, (size(wb, 1),), own=false)
 
-    vb2i = CuArray{eltype(R),1}(vb2.buf, (size(vb2, 1),), own=false)
-    wb2i = CuArray{eltype(R),1}(wb2.buf, (size(wb2, 1),), own=false)
+    vb2i = CuArray{eltype(vb2),1}(vb2.buf, (size(vb2, 1),), own=false)
+    wb2i = CuArray{eltype(wb2),1}(wb2.buf, (size(wb2, 1),), own=false)
 
     for i=1:size(R, 3)
         Ri.offset = (i-1)*Base.elsize(Ri)*batch_size
@@ -155,8 +155,8 @@ end
         vb2i.offset = (i-1)*Base.elsize(vb2i)*length(vb2i)
         wb2i.offset = (i-1)*Base.elsize(wb2i)*length(wb2i)
         fill!(Ri, 0)
-        BLAS.ger!(T(α), vbi, wbi, Ri)
-        BLAS.ger!(-T(α), vb2i, wb2i, Ri)
+        CUBLAS.ger!(T(α), vbi, wbi, Ri)
+        CUBLAS.ger!(-T(α), vb2i, wb2i, Ri)
     end
     return R
 end
