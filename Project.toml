@@ -8,3 +8,7 @@ CUDAnative = "be33ccc6-a3ff-5ff2-a52e-74243cff1e17"
 CuArrays = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 NeuralQuantum = "eb923273-1014-53d4-802c-abcb7262255a"
+
+[compat]
+CUDAnative = ">= 1.7.3"
+NNlib = ">= 0.6.6"
